@@ -1,0 +1,9 @@
+url = "http://localhost:3000/v1/api"
+
+name = "name"
+secret = "secret"
+
+[suffix]
+auth = "/authenticate/system"
+devices = "/servers/%d/devices"
+device = "/devices/%d"
