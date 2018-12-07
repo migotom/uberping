@@ -11,9 +11,10 @@ import (
 	"github.com/migotom/uberping/internal/worker"
 )
 
-func configParser(arguments map[string]interface{}, appConfig *schema.GeneralConfig) ([]schema.HostsLoader, []worker.ResultsSaver) {
+func configParser(arguments map[string]interface{}, appConfig *schema.GeneralConfig) ([]schema.HostsLoader, []worker.ResultsSaver, []schema.HostsCleaner) {
 	var hostsLoaders []schema.HostsLoader
 	var resultsSavers []worker.ResultsSaver
+	var cleaners []schema.HostsCleaner
 
 	// Parse arguments
 
@@ -80,6 +81,15 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 		})
 	}
 
+	if db := arguments["--source-db"].(bool); db {
+		hostsLoaders = append(hostsLoaders, func(parser schema.HostParser) ([]schema.Host, error) {
+			return driver.DBSqlLoadHosts(parser, &appConfig.DB)
+		})
+		cleaners = append(cleaners, func() {
+			driver.DBCleaner(&appConfig.DB)
+		})
+	}
+
 	if api := arguments["--source-api"].(bool); api {
 		hostsLoaders = append(hostsLoaders, func(parser schema.HostParser) ([]schema.Host, error) {
 			return driver.APILoadHosts(parser, &appConfig.API)
@@ -98,5 +108,14 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 		})
 	}
 
-	return hostsLoaders, resultsSavers
+	if db := arguments["--out-db"].(bool); db {
+		resultsSavers = append(resultsSavers, func(pingResult schema.PingResult) error {
+			return driver.DBSqlSavePingResult(pingResult, &appConfig.DB)
+		})
+		cleaners = append(cleaners, func() {
+			driver.DBCleaner(&appConfig.DB)
+		})
+	}
+
+	return hostsLoaders, resultsSavers, cleaners
 }
