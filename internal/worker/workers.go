@@ -17,7 +17,7 @@ func toMs(duration time.Duration) string {
 	return fmt.Sprintf("%.3fms", float64(duration.Nanoseconds())/1e6)
 }
 
-// Saver worker iterates over config.Results tasks and saving them using ResultSaver function.
+// Saver worker iterates over config.Results tasks and saving them using ResultSavers functions.
 func Saver(id int, config schema.GeneralConfig, savers []ResultsSaver, wg *sync.WaitGroup) {
 	defer wg.Done()
 
