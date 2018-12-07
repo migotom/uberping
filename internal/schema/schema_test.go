@@ -64,7 +64,7 @@ func TestValidHostsSetGet(t *testing.T) {
 		return validHosts, nil
 	}
 
-	if err := hosts.Set(loader); err != nil {
+	if err := hosts.Add(loader); err != nil {
 		t.Error("hosts.Set returns error on valid loader")
 	}
 
@@ -82,7 +82,7 @@ func TestInvalidHostsSetGet(t *testing.T) {
 		return nil, errors.New("error")
 	}
 
-	if err := hosts.Set(errorLoader); err == nil {
+	if err := hosts.Add(errorLoader); err == nil {
 		t.Error("hosts.Set doesn't return error")
 	}
 

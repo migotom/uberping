@@ -1,9 +1,10 @@
+[api]
 url = "http://localhost:3000/v1/api"
 
 name = "name"
 secret = "secret"
 
-[suffix]
-auth = "/authenticate/system"
-devices = "/servers/%d/devices"
-device = "/devices/%d"
+[api.endpoints]
+authenticate = "/authenticate/system"
+get_devices = "/servers/%d/devices"
+update_device = "/devices/%d/ping"

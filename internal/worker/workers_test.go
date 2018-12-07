@@ -20,10 +20,11 @@ func TestSaver(t *testing.T) {
 	config.Results = make(chan schema.PingResult, 1)
 
 	var result string
-	s := func(r schema.PingResult) error {
+	var s []ResultsSaver
+	s = append(s, func(r schema.PingResult) error {
 		result = "done"
 		return nil
-	}
+	})
 
 	var wg sync.WaitGroup
 	wg.Add(1)
