@@ -18,11 +18,15 @@ func toMs(duration time.Duration) string {
 }
 
 // Saver worker iterates over config.Results tasks and saving them using ResultSaver function.
-func Saver(id int, config schema.GeneralConfig, saver ResultsSaver, wg *sync.WaitGroup) {
+func Saver(id int, config schema.GeneralConfig, savers []ResultsSaver, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for result := range config.Results {
-		saver(result)
+		for _, resultSaver := range savers {
+			if err := resultSaver(result); err != nil {
+				log.Panicln(err)
+			}
+		}
 	}
 }
 
@@ -63,7 +67,7 @@ func Pinger(id int, config schema.GeneralConfig, jobs <-chan schema.Host, wg *sy
 			result.Output = append(result.Output, line)
 			result.Loss = stats.PacketLoss
 			result.AvgTime = stats.AvgRtt.Seconds()
-
+			result.Host = device
 			config.Results <- result
 		}
 

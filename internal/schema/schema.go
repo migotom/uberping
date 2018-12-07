@@ -11,15 +11,15 @@ type APIConfig struct {
 	URL       string
 	Name      string
 	Secret    string
-	AuthData  interface{}
+	Client    interface{}
 	Endpoints APIEndpoints
 }
 
 // APIEndpoints defined extrnal API endpoints.
 type APIEndpoints struct {
-	Auth    string
-	Devices string
-	Device  string
+	Authenticate string
+	GetDevices   string `toml:"get_devices"`
+	UpdateDevice string `toml:"update_device"`
 }
 
 // PingConfig sets up go-ping configuration.
@@ -32,6 +32,7 @@ type PingConfig struct {
 
 // PingResult keep result of go-ping operation.
 type PingResult struct {
+	Host    Host
 	Output  []string
 	Loss    float64
 	AvgTime float64
@@ -83,13 +84,15 @@ func (h *Hosts) Get() []Host {
 	return h.hosts
 }
 
-// Set hosts using HostsLoader function.
-func (h *Hosts) Set(loader HostsLoader) error {
+// Add hosts using HostsLoader function.
+func (h *Hosts) Add(loader HostsLoader) error {
 	hosts, err := loader(h.parseHost)
 	if err != nil {
 		return err
 	}
 
-	h.hosts = hosts
+	for _, host := range hosts {
+		h.hosts = append(h.hosts, host)
+	}
 	return nil
 }

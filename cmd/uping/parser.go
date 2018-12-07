@@ -11,9 +11,9 @@ import (
 	"github.com/migotom/uberping/internal/worker"
 )
 
-func configParser(arguments map[string]interface{}, appConfig *schema.GeneralConfig) (schema.HostsLoader, worker.ResultsSaver) {
-	var hostsLoader schema.HostsLoader
-	var resultsSaver worker.ResultsSaver
+func configParser(arguments map[string]interface{}, appConfig *schema.GeneralConfig) ([]schema.HostsLoader, []worker.ResultsSaver) {
+	var hostsLoaders []schema.HostsLoader
+	var resultsSavers []worker.ResultsSaver
 
 	// Parse arguments
 
@@ -32,6 +32,12 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 	proto := arguments["-p"].(string)
 	if proto == "udp" {
 		appConfig.Ping.Privileged = false
+	}
+
+	if appConfig.Verbose {
+		resultsSavers = append(resultsSavers, func(pingResult schema.PingResult) error {
+			return driver.StdoutPingResult(pingResult)
+		})
 	}
 
 	appConfig.Ping.Interval = time.Duration(1) * time.Second
@@ -63,40 +69,34 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 	}
 
 	if hosts, ok := arguments["<hosts>"].([]string); ok {
-		hostsLoader = func(parser schema.HostParser) ([]schema.Host, error) {
+		hostsLoaders = append(hostsLoaders, func(parser schema.HostParser) ([]schema.Host, error) {
 			return driver.ArgvLoadHosts(parser, hosts)
-		}
+		})
 	}
 
-	if file, ok := arguments["<file-in>"].(string); ok {
-		hostsLoader = func(parser schema.HostParser) ([]schema.Host, error) {
+	if file, ok := arguments["--source-file"].(string); ok {
+		hostsLoaders = append(hostsLoaders, func(parser schema.HostParser) ([]schema.Host, error) {
 			return driver.FileLoadHosts(parser, file)
-		}
+		})
 	}
 
 	if api := arguments["--source-api"].(bool); api {
-		hostsLoader = func(parser schema.HostParser) ([]schema.Host, error) {
+		hostsLoaders = append(hostsLoaders, func(parser schema.HostParser) ([]schema.Host, error) {
 			return driver.APILoadHosts(parser, &appConfig.API)
-		}
+		})
 	}
 
 	if api := arguments["--out-api"].(bool); api {
-		resultsSaver = func(pingResult schema.PingResult) error {
+		resultsSavers = append(resultsSavers, func(pingResult schema.PingResult) error {
 			return driver.APISavePingResult(pingResult, &appConfig.API)
-		}
+		})
 	}
 
-	if file, ok := arguments["<file-out>"].(string); ok {
-		resultsSaver = func(pingResult schema.PingResult) error {
+	if file, ok := arguments["--out-file"].(string); ok {
+		resultsSavers = append(resultsSavers, func(pingResult schema.PingResult) error {
 			return driver.FileSavePingResult(pingResult, file)
-		}
+		})
 	}
 
-	if resultsSaver == nil {
-		resultsSaver = func(pingResult schema.PingResult) error {
-			return driver.StdoutPingResult(pingResult)
-		}
-	}
-
-	return hostsLoader, resultsSaver
+	return hostsLoaders, resultsSavers
 }
