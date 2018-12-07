@@ -3,7 +3,6 @@ package driver
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -21,57 +20,103 @@ type authorizeResponse struct {
 	IDServer int    `json:"id_server"`
 }
 
-// APILoadHosts load list of hosts using external API service, see README.md for more details.
-func APILoadHosts(hostParser schema.HostParser, apiConfig *schema.APIConfig) ([]schema.Host, error) {
-	// authorize
-	client := http.Client{}
+type updateDeviceRequest struct {
+	Loss    int     `json:"loss"`
+	AvgTime float64 `json:"average_time"`
+}
 
-	authReq := authorizeRequest{Name: apiConfig.Name, Secret: apiConfig.Secret}
+type apiClient struct {
+	httpClient http.Client
+	authData   authorizeResponse
+	apiConfig  *schema.APIConfig
+}
+
+// authorize obtains one-time token
+func (c *apiClient) authorize() error {
+	authReq := authorizeRequest{Name: c.apiConfig.Name, Secret: c.apiConfig.Secret}
+
 	authJSON, err := json.Marshal(authReq)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	res, err := client.Post(apiConfig.URL+apiConfig.Endpoints.Auth, "application/json", bytes.NewBuffer(authJSON))
-
+	res, err := c.httpClient.Post(c.apiConfig.URL+c.apiConfig.Endpoints.Authenticate, "application/json", bytes.NewBuffer(authJSON))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf(res.Status)
+		return fmt.Errorf(res.Status)
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var authRes authorizeResponse
-	err = json.Unmarshal(body, &authRes)
+	err = json.Unmarshal(body, &c.authData)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// do request to external API using auth token
+func (c *apiClient) request(method, url string, requestBody []byte) ([]byte, error) {
+	for retries := 0; retries < 3; retries++ {
+
+		req, err := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Add("X-Auth-Token", c.authData.Token)
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := c.httpClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if res.StatusCode == 401 {
+			// reauthorize and retry with new token
+			c.authorize()
+			continue
+		} else if res.StatusCode != 200 {
+			return nil, fmt.Errorf(res.Status)
+		}
+		defer res.Body.Close()
+
+		responseBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		return responseBody, nil
+	}
+	return nil, fmt.Errorf("request retry limit exceeded")
+}
+
+func getAPIClient(apiConfig *schema.APIConfig) *apiClient {
+	client, ok := apiConfig.Client.(*apiClient)
+	if !ok {
+		client = &apiClient{}
+		client.apiConfig = apiConfig
+		apiConfig.Client = client
+	}
+	return client
+}
+
+// APILoadHosts load list of hosts using external API service, see README.md for more details.
+func APILoadHosts(hostParser schema.HostParser, apiConfig *schema.APIConfig) ([]schema.Host, error) {
+	client := getAPIClient(apiConfig)
+
+	if err := client.authorize(); err != nil {
 		return nil, err
 	}
-	apiConfig.AuthData = authRes
 
-	_, ok2 := apiConfig.AuthData.(authorizeResponse)
-	if !ok2 {
-		fmt.Println("ups1")
-	}
-
-	// load hosts to test
-	req, err := http.NewRequest("GET", apiConfig.URL+fmt.Sprintf(apiConfig.Endpoints.Devices, authRes.IDServer), nil)
-	req.Header.Add("X-Auth-Token", authRes.Token)
-	res, err = client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf(res.Status)
-	}
-	defer res.Body.Close()
-
-	body, err = ioutil.ReadAll(res.Body)
+	body, err := client.request("GET", apiConfig.URL+fmt.Sprintf(apiConfig.Endpoints.GetDevices, client.authData.IDServer), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -93,16 +138,26 @@ func APILoadHosts(hostParser schema.HostParser, apiConfig *schema.APIConfig) ([]
 	return apiDevices, nil
 }
 
-// APISavePingResult ...
+// APISavePingResult save probe results using external API
 func APISavePingResult(result schema.PingResult, apiConfig *schema.APIConfig) error {
-	authRes, ok := apiConfig.AuthData.(authorizeResponse)
-	if !ok {
-		fmt.Println("ups", apiConfig.AuthData)
-		return errors.New("Can't load config")
-	}
-	fmt.Println(authRes)
+	client := getAPIClient(apiConfig)
 
-	// TODO implement
+	// consider this, should skip update if host doesn't have ID, or should search in API using IP?
+	if result.Host.ID == 0 {
+		return nil
+	}
+
+	apiDevResult := updateDeviceRequest{Loss: int(result.Loss), AvgTime: result.AvgTime}
+
+	apiDevResultJSON, err := json.Marshal(apiDevResult)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.request("POST", apiConfig.URL+fmt.Sprintf(apiConfig.Endpoints.UpdateDevice, result.Host.ID), apiDevResultJSON)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
