@@ -6,6 +6,21 @@ import (
 	"time"
 )
 
+// DBConfig defines database connection settings.
+type DBConfig struct {
+	Driver     string
+	Params     string
+	Connection interface{}
+	IDserver   int `toml:"id_server"`
+	Queries    DBQueries
+}
+
+// DBQueries defines list of database queries.
+type DBQueries struct {
+	GetDevices   string `toml:"get_devices"`
+	UpdateDevice string `toml:"update_device"`
+}
+
 // APIConfig defines external API settings.
 type APIConfig struct {
 	URL       string
@@ -46,12 +61,14 @@ type GeneralConfig struct {
 	Results chan PingResult
 	Ping    PingConfig
 	API     APIConfig
+	DB      DBConfig
 }
 
 // Host definition.
 type Host struct {
-	ID int    `json:"id"`
-	IP string `json:"ip"`
+	ID            int    `json:"id"`
+	IP            string `json:"ip"`
+	InactiveSince int    `json:"inactive_since"`
 }
 
 // HostParser validates input string as proper host and converts it to format accepted by probe.
@@ -59,6 +76,9 @@ type HostParser func(string) (string, error)
 
 // HostsLoader returns list of hosts needed by probe workers, throws error in case failure of any validation.
 type HostsLoader func(HostParser) ([]Host, error)
+
+// HostsCleaner cleanups handlers, connections, open sockets, files etc. used by Loader/Saver/Parser.
+type HostsCleaner func()
 
 // Hosts defines list of hosts to probe.
 type Hosts struct {

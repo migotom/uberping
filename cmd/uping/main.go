@@ -28,13 +28,15 @@ Options:
   -i <ping-interval>       Interval between pings, eg. -i 1s, -i 100ms [default: 1s]
   -t <host-timeout>        Timeout before probing one host terminates, regardless of how many pings perfomed, eg. -t 1s, -t 100ms [default: <count> * 1s]
   -w <workers>             Number of paraller workers to run [default: 4]
+  --source-db              Load hosts using external API configured by -C <config-file>
   --source-api             Load hosts using external API configured by -C <config-file>
   --source-file <file-in>  Load hosts from file <file-in>
   --out-api                Save tests results using external API configured by -C <config-file>
   --out-file <file-out>    Save tests results to file <file-out>
+  --out-db                 Save tests results to file <file-out>
 `
 
-const version = "0.1"
+const version = "0.1.1"
 
 func main() {
 	var Hosts schema.Hosts
@@ -43,7 +45,7 @@ func main() {
 	fmt.Println(arguments)
 
 	appConfig := schema.GeneralConfig{}
-	hostsLoaders, resultsSavers := configParser(arguments, &appConfig)
+	hostsLoaders, resultsSavers, cleaners := configParser(arguments, &appConfig)
 
 	for _, hostsLoader := range hostsLoaders {
 		if err := Hosts.Add(hostsLoader); err != nil {
@@ -76,4 +78,6 @@ func main() {
 
 	close(appConfig.Results)
 	wgWriter.Wait()
+
+	worker.Cleaner(appConfig, cleaners)
 }
