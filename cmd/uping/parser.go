@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/migotom/uberping/internal/driver"
 	"github.com/migotom/uberping/internal/schema"
+	"github.com/migotom/uberping/internal/schema/config"
 	"github.com/migotom/uberping/internal/worker"
 )
 
@@ -19,10 +19,10 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 	// Parse arguments
 
 	// Load config
-	if apiConfigFile, ok := arguments["-C"].(string); ok {
-		if _, err := toml.DecodeFile(apiConfigFile, &appConfig); err != nil {
-			log.Fatal(err)
-		}
+	var apiConfigFile string
+	apiConfigFile, _ = arguments["-C"].(string)
+	if err := config.LoadConfigFile(appConfig, apiConfigFile); err != nil {
+		log.Fatal(err)
 	}
 
 	// Override config by args

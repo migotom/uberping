@@ -8,22 +8,12 @@ import (
 	"github.com/migotom/uberping/internal/schema"
 )
 
-// TODO
-// keep db connection between calls
-
 type sqlDB struct {
 	conn     *sql.DB
 	dbConfig *schema.DBConfig
 }
 
 func (d *sqlDB) connect() error {
-	/*
-		problem:
-		1
-		defer zamkniecia polaczenia kiedy? najlepiej na koniec cyklu, najlepiej dodac w driverach cleanery,
-		dodanie readera/writera powoduje dodanie tez clenarra ktory sprawdza interfejs powiazany z obietem polaczeni, jesli jest to wola np close
-
-	*/
 	var err error
 	d.conn, err = sql.Open(d.dbConfig.Driver, d.dbConfig.Params)
 	if err != nil {
@@ -97,8 +87,13 @@ func DBSqlSavePingResult(result schema.PingResult, dbConfig *schema.DBConfig) er
 	}
 
 	if result.Loss == 100 {
-		result.Host.InactiveSince++
+		if !result.Host.InactiveSince.Valid {
+			result.Host.InactiveSince = sql.NullString{String: "NOW()", Valid: true}
+		}
+	} else {
+		result.Host.InactiveSince = sql.NullString{}
 	}
+
 	_, err := db.conn.Exec(dbConfig.Queries.UpdateDevice, result.Loss, result.AvgTime, result.Host.InactiveSince, result.Host.ID)
 	if err != nil {
 		return err

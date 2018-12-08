@@ -34,18 +34,26 @@ Outputs (may be combined):
 
 bla bla
 
+## Features
+ 
+bla bla
+descrine config loading sequence
+
 ## TODO
 
 0.2:
-- add driver for db loader/saver
-- add api (and future db) driver tests
++ add driver for db loader/saver
+- add api (and future db) driver tests, and new schema
++ add searching for defult config, linux: etc, home, -C, macosx: ... windows: ....
+^ almost, add windows config loading as well
+- modify example config
 
 0.3:
-- add arp protocol
-- add fallback of protocol selection
+- add daemon mode with intervals (or/and non stop option)
 
 0.4:
-- add daemon mode with intervals (or/and non stop option)
+- add arp protocol
+- add fallback of protocol selection
 
 0.5:
 - polishing code, fix grammar mistakes, typos, etc,
