@@ -56,7 +56,7 @@ func (c *apiClient) authorize() error {
 
 	err = json.Unmarshal(body, &c.authData)
 	if err != nil {
-		return err
+		return fmt.Errorf("Invalid JSON response: %v", err)
 	}
 
 	return nil
