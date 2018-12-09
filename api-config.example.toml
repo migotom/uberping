@@ -4,7 +4,10 @@ params = "postgres://login:pass@localhost/database"
 id_server = 1
 
     [db.queries]
-    get_devices =  "SELECT id, ip, inactive_since FROM devices WHERE id_server = $1"
+    # $1 means db.id_server
+    get_devices =  "SELECT id, ip, inactive_since FROM devices WHERE id_server = $1"  
+
+    # $1..$3 self explanatory, $4 id of tested device 
     update_device = "UPDATE devices SET loss = $1, average_time = $2, inactive_since = $3, test_date = NOW() WHERE id = $4"
     
 [api]
@@ -15,5 +18,5 @@ secret = "secret"
 
     [api.endpoints]
     authenticate = "/authenticate/system"
-    get_devices = "/servers/%d/devices"
-    update_device = "/devices/%d/ping"
+    get_devices = "/servers/%d/devices"    # %d id of server, db.id_server
+    update_device = "/devices/%d/ping"     # %d id of tested device

@@ -61,11 +61,11 @@ blah blah
 
 0.3:
 - [x] add daemon mode with intervals (or/and nonstop option)
-- [ ] add retry to db driver
+- [x] add retry to db driver
 - [ ] add gorutines for loaders/savers
 - [ ] add db and new schema tests
 - [ ] add windows config loading as well
-- [ ] update example config, add comments describing API/DB fields
+- [x] update example config, add comments describing API/DB fields
 
 0.4:
 - [ ] add arp protocol
