@@ -3,6 +3,7 @@ package driver
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	_ "github.com/lib/pq" // load psql driver
 	"github.com/migotom/uberping/internal/schema"
@@ -19,8 +20,41 @@ func (d *sqlDB) connect() error {
 	if err != nil {
 		return err
 	}
-	//defer db.Close()
 	return nil
+}
+
+type retryFunc func() error
+
+func (d *sqlDB) retry(retryFunc retryFunc) (err error) {
+	for retries := 0; retries < 3; retries++ {
+		err = retryFunc()
+		if err != nil {
+			// cleanup
+			d.conn.Close()
+
+			// reconnect and retry
+			time.Sleep(1000 * time.Millisecond)
+			d.connect()
+			continue
+		}
+	}
+	return
+}
+
+func (d *sqlDB) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+	err = d.retry(func() error {
+		rows, err = d.conn.Query(query, args...)
+		return err
+	})
+	return
+}
+
+func (d *sqlDB) Exec(query string, args ...interface{}) (result sql.Result, err error) {
+	err = d.retry(func() error {
+		result, err = d.conn.Exec(query, args...)
+		return err
+	})
+	return
 }
 
 func getDB(dbConfig *schema.DBConfig) *sqlDB {
@@ -50,7 +84,7 @@ func DBSqlLoadHosts(hostParser schema.HostParser, dbConfig *schema.DBConfig) ([]
 
 	var hosts []schema.Host
 
-	rows, err := db.conn.Query(dbConfig.Queries.GetDevices, dbConfig.IDserver)
+	rows, err := db.Query(dbConfig.Queries.GetDevices, dbConfig.IDserver)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +128,7 @@ func DBSqlSavePingResult(result schema.PingResult, dbConfig *schema.DBConfig) er
 		result.Host.InactiveSince = sql.NullString{}
 	}
 
-	_, err := db.conn.Exec(dbConfig.Queries.UpdateDevice, result.Loss, result.AvgTime, result.Host.InactiveSince, result.Host.ID)
+	_, err := db.Exec(dbConfig.Queries.UpdateDevice, result.Loss, result.AvgTime, result.Host.InactiveSince, result.Host.ID)
 	if err != nil {
 		return err
 	}

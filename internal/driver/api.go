@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/migotom/uberping/internal/schema"
 )
@@ -64,6 +65,8 @@ func (c *apiClient) authorize() error {
 
 // do request to external API using auth token
 func (c *apiClient) request(method, url string, requestBody []byte) ([]byte, error) {
+	var lastError string
+
 	for retries := 0; retries < 3; retries++ {
 
 		req, err := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
@@ -84,7 +87,10 @@ func (c *apiClient) request(method, url string, requestBody []byte) ([]byte, err
 			c.authorize()
 			continue
 		} else if res.StatusCode != 200 {
-			return nil, fmt.Errorf(res.Status)
+			// note last error and retry
+			lastError = res.Status
+			time.Sleep(1000 * time.Millisecond)
+			continue
 		}
 		defer res.Body.Close()
 
@@ -95,7 +101,7 @@ func (c *apiClient) request(method, url string, requestBody []byte) ([]byte, err
 
 		return responseBody, nil
 	}
-	return nil, fmt.Errorf("request retry limit exceeded")
+	return nil, fmt.Errorf("request retry limit exceeded, last error: %v", lastError)
 }
 
 func getAPIClient(apiConfig *schema.APIConfig) *apiClient {
