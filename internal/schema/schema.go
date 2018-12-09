@@ -22,11 +22,12 @@ type PingResult struct {
 
 // GeneralConfig main application configuration.
 type GeneralConfig struct {
-	Verbose bool
-	Grouped bool
-	Workers int
-	Results chan PingResult
-	Ping    PingConfig
-	API     APIConfig
-	DB      DBConfig
+	Verbose       bool
+	Grouped       bool
+	TestsInterval time.Duration
+	Workers       int
+	Results       chan PingResult
+	Ping          PingConfig
+	API           APIConfig
+	DB            DBConfig
 }
