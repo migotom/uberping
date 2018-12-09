@@ -1,10 +1,19 @@
+[db]
+driver = "postgres"
+params = "postgres://login:pass@localhost/database"
+id_server = 1
+
+    [db.queries]
+    get_devices =  "SELECT id, ip, inactive_since FROM devices WHERE id_server = $1"
+    update_device = "UPDATE devices SET loss = $1, average_time = $2, inactive_since = $3, test_date = NOW() WHERE id = $4"
+    
 [api]
 url = "http://localhost:3000/v1/api"
 
 name = "name"
 secret = "secret"
 
-[api.endpoints]
-authenticate = "/authenticate/system"
-get_devices = "/servers/%d/devices"
-update_device = "/devices/%d/ping"
+    [api.endpoints]
+    authenticate = "/authenticate/system"
+    get_devices = "/servers/%d/devices"
+    update_device = "/devices/%d/ping"

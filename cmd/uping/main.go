@@ -28,12 +28,12 @@ Options:
   -i <ping-interval>       Interval between pings, eg. -i 1s, -i 100ms [default: 1s]
   -t <host-timeout>        Timeout before probing one host terminates, regardless of how many pings perfomed, eg. -t 1s, -t 100ms [default: <count> * 1s]
   -w <workers>             Number of paraller workers to run [default: 4]
-  --source-db              Load hosts using external API configured by -C <config-file>
+  --source-db              Load hosts using database configured by -C <config-file>
   --source-api             Load hosts using external API configured by -C <config-file>
   --source-file <file-in>  Load hosts from file <file-in>
+  --out-db                 Save tests results database configured by -C <config-file>
   --out-api                Save tests results using external API configured by -C <config-file>
   --out-file <file-out>    Save tests results to file <file-out>
-  --out-db                 Save tests results to file <file-out>
 `
 
 const version = "0.1.1"
