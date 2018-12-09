@@ -2,6 +2,7 @@ package schema
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -11,6 +12,23 @@ type Host struct {
 	ID            int            `json:"id"`
 	IP            string         `json:"ip"`
 	InactiveSince sql.NullString `json:"inactive_since"`
+}
+
+// UnmarshalJSON is needed for unmarshal sq.NullString value used by SQL driver.
+func (h *Host) UnmarshalJSON(data []byte) error {
+	type Alias Host
+	aux := &struct {
+		InactiveSince string `json:"inactive_since"`
+		*Alias
+	}{
+		Alias: (*Alias)(h),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	h.InactiveSince = sql.NullString{String: aux.InactiveSince, Valid: true}
+	return nil
 }
 
 // HostParser validates input string as proper host and converts it to format accepted by probe.

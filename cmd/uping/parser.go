@@ -41,6 +41,12 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 		})
 	}
 
+	if interval, ok := arguments["-I"].(string); ok {
+		if interval, err := time.ParseDuration(interval); err == nil {
+			appConfig.TestsInterval = interval
+		}
+	}
+
 	appConfig.Ping.Interval = time.Duration(1) * time.Second
 	if interval, ok := arguments["-i"].(string); ok {
 		if interval, err := time.ParseDuration(interval); err == nil {
