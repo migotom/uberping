@@ -37,7 +37,7 @@ Options:
   --out-file <file-out>    Save tests results to file <file-out>
 `
 
-const version = "0.3.1"
+const version = "0.3.5"
 
 func loadHosts(hostsLoaders *[]schema.HostsLoader, hosts *schema.Hosts) {
 	hosts.Reset()
