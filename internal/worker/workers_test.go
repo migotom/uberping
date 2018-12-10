@@ -28,7 +28,7 @@ func TestSaver(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go Saver(1, config, s, &wg)
+	go Saver(config, s, &wg)
 
 	config.Results <- schema.PingResult{Loss: 1}
 	close(config.Results)

@@ -37,7 +37,7 @@ Options:
   --out-file <file-out>    Save tests results to file <file-out>
 `
 
-const version = "0.2.1"
+const version = "0.3.1"
 
 func loadHosts(hostsLoaders *[]schema.HostsLoader, hosts *schema.Hosts) {
 	for _, hostsLoader := range *hostsLoaders {
@@ -62,25 +62,27 @@ func main() {
 	appConfig := schema.GeneralConfig{}
 	hostsLoaders, resultsSavers, cleaners := configParser(arguments, &appConfig)
 
+	// Load list of hosts
+	loadHosts(&hostsLoaders, &Hosts)
+	if len(Hosts.Get()) == 0 {
+		log.Fatalln("No hosts to test.")
+	}
+
 	// Create workers pool
 	jobs := make(chan schema.Host, appConfig.Workers)
-	appConfig.Results = make(chan schema.PingResult, appConfig.Workers*2)
+	appConfig.Results = make(chan schema.PingResult, len(Hosts.Get()))
 
 	var wgPinger sync.WaitGroup
 	var wgWriter sync.WaitGroup
 
 	wgWriter.Add(1)
-	go worker.Saver(0, appConfig, resultsSavers, &wgWriter)
+	go worker.Saver(appConfig, resultsSavers, &wgWriter)
 
 	for i := 0; i < appConfig.Workers; i++ {
 		wgPinger.Add(1)
 		go worker.Pinger(i, appConfig, jobs, &wgPinger)
 	}
 
-	loadHosts(&hostsLoaders, &Hosts)
-	if len(Hosts.Get()) == 0 {
-		log.Fatalln("No hosts to test.")
-	}
 	pushJobs(jobs, &Hosts)
 
 	if appConfig.TestsInterval.Seconds() > 0.0 {

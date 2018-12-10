@@ -25,16 +25,42 @@ func Cleaner(config schema.GeneralConfig, cleaners []schema.HostsCleaner) {
 }
 
 // Saver worker iterates over config.Results tasks and saving them using ResultSavers functions.
-func Saver(id int, config schema.GeneralConfig, savers []ResultsSaver, wg *sync.WaitGroup) {
+func Saver(config schema.GeneralConfig, savers []ResultsSaver, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for result := range config.Results {
-		for _, resultSaver := range savers {
-			if err := resultSaver(result); err != nil {
-				log.Panicln(err)
+	var saversChannels []chan schema.PingResult
+	var wgSavers sync.WaitGroup
+
+	// assign results channel for each saver
+	for _, resultSaver := range savers {
+		ch := make(chan schema.PingResult, cap(config.Results))
+		saversChannels = append(saversChannels, ch)
+
+		// run each saver on separate gorutine
+		wgSavers.Add(1)
+		go func(results chan schema.PingResult, wgs *sync.WaitGroup, saver ResultsSaver) {
+			for r := range results {
+				if err := saver(r); err != nil {
+					fmt.Println("error", err)
+					log.Fatalln(err)
+				}
 			}
+			wgs.Done()
+		}(ch, &wgSavers, resultSaver)
+	}
+
+	// dispatch results between savers
+	for result := range config.Results {
+		for _, ch := range saversChannels {
+			ch <- result
 		}
 	}
+
+	// cleanup
+	for i := range savers {
+		close(saversChannels[i])
+	}
+	wgSavers.Wait()
 }
 
 // Pinger worker iterates over schema.Host tasks, running Ping command for each of them and push results into config.Results channel.
@@ -46,14 +72,14 @@ func Pinger(id int, config schema.GeneralConfig, jobs <-chan schema.Host, wg *sy
 
 		pinger, err := goping.NewPinger(device.IP)
 		if err != nil {
-			log.Fatalf("ERROR: %s\n", err.Error())
+			log.Fatalln(err.Error())
 			return
 		}
 
 		pinger.OnRecv = func(pkt *goping.Packet) {
 
-			line := fmt.Sprintf("[%d] %d bytes from %s: icmp_seq=%d time=%v",
-				id, pkt.Nbytes, pkt.IPAddr, pkt.Seq, toMs(pkt.Rtt))
+			line := fmt.Sprintf("%d bytes from %s: icmp_seq=%d time=%v",
+				pkt.Nbytes, pkt.IPAddr, pkt.Seq, toMs(pkt.Rtt))
 
 			if config.Verbose && !config.Grouped {
 				fmt.Println(line)

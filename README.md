@@ -62,21 +62,22 @@ blah blah
 0.3:
 - [x] add daemon mode with intervals (or/and nonstop option)
 - [x] add retry to db driver
-- [ ] add gorutines for loaders/savers
-- [ ] add db and new schema tests
-- [ ] add windows config loading as well
+- [x] add gorutines for loaders/savers
+- [ ] loading rest of parameters from config file
 - [x] update example config, add comments describing API/DB fields
 
 0.4:
+- [ ] add db and new schema tests
 - [ ] add arp protocol
 - [ ] add fallback of protocol selection
+- [ ] add windows config loading as well
 
 0.5:
 - [ ] polishing code, fix grammar mistakes, typos, etc,
 - [ ] organize depedencies as third party modules
 - [ ] add more/better comments
 - [ ] add makefile
-- [ ] improve readme (better description, features, config loading sequence, etc)
+- [ ] improve readme (better description, features, config loading sequence, config description, etc)
 
 0.6 .. 1.0:
 - [ ] better customization of api/db config schema, eg. custom json requests, template system for endpoints
