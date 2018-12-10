@@ -56,8 +56,8 @@ blah blah
 - ARP protocol
 - fallback to other protocol in case of failure
 - Windows support
-- better custoimzation
-- mode advanced ping options
+- better customization
+- more advanced ping options
 - mode probes
 
 ### Config loading sequence (the first least important):
