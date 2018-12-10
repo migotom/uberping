@@ -1,3 +1,12 @@
+workers = 4
+interval_between_tests = "1m"
+
+[ping]
+protocol = "udp"
+interval = "500ms"
+timeout = "4s"
+count = 10
+
 [db]
 driver = "postgres"
 params = "postgres://login:pass@localhost/database"

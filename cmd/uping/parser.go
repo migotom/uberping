@@ -51,7 +51,7 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 		})
 	}
 
-	if interval, ok := arguments["-I"].(string); ok {
+	if interval, ok := arguments["-d"].(string); ok {
 		if interval, err := time.ParseDuration(interval); err == nil {
 			appConfig.TestsInterval.Duration = interval
 		}

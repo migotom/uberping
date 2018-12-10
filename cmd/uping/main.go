@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -20,7 +19,7 @@ Usage:
   uping --version
 
 Options:
-  -I <tests-interval>      Interval between tests, if provided uping will perform tests indefinitely, e.g. every -I 1m, -I 1m30s, -I 1h30m10s
+  -d <tests-interval>      Interval between tests, if provided uping will perform tests indefinitely, e.g. every -I 1m, -I 1m30s, -I 1h30m10s
   -C <config-file>         Use configuration file, eg. API endpoints, secrets, etc...
   -s                       Be silent and don't print output to stdout, only errors to stderr
   -g                       Print grouped results
@@ -93,7 +92,6 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println("TICK!", appConfig.TestsInterval.Duration)
 				loadHosts(&hostsLoaders, &Hosts)
 				pushJobs(jobs, &Hosts)
 			}

@@ -11,7 +11,7 @@ Usage:
   uping --version
 
 Options:
-  -I <tests-interval>      Interval between tests, if provided uping will perform tests indefinitely, e.g. every -I 1m, -I 1m30s, -I 1h30m10s
+  -d <tests-interval>      Interval between tests, if provided uping will perform tests indefinitely, e.g. every -I 1m, -I 1m30s, -I 1h30m10s
   -C <config-file>         Use configuration file, e.g. API endpoints, secrets, etc...
   -s                       Be silent and don't print output to stdout
   -g                       Print grouped results
@@ -32,9 +32,6 @@ Outputs (may be combined):
   --out-api                Save tests results using external API configured by -C <config-file>
   --out-file <file-out>    Save tests results to file <file-out>
 ```
-## Usage examples
-
-blah blah
 
 ## Installation
 
@@ -42,49 +39,50 @@ blah blah
 
 ## Features
  
-blah blah
+### Implemented:
 
-## TODO
+- ping hosts using unprivileged udp or privileged icmp
+- take hosts to test from command line, file, database (currently only postgresql) and external REST API
+- save test results to file, database and external REST API
+- ability to combine input sources and outputs, eg. load hosts from file and database (list of hosts are refreshed before each tests iteration)
+- run tests in parallel (configurable amount of test workers)
+- print output live or groupped (may be needed to more human readable result from parallel tests)
+- load settings from config TOML file (searching sequence below)
+- ablity to run in continous mode with user defined intervals between tests
+- DB/API connection retries
 
-0.1:
-- [x] add drivers for file, argv/stdout, api loader/saver
-- [x] add argv and toml config parsers
-- [x] add support for icmp/udp pinging
-- [x] run tests tasks parallel with gorutines pool
+### Not yet implemented:
 
-0.2:
-- [x] add driver for db loader/saver
-- [x] add api tests
-- [x] add searching for default config, linux: etc, home, -C, macosx: ... windows: ....
-- [x] modify example config
-- [x] update readme of uping command help
+- ARP protocol
+- fallback to other protocol in case of failure
+- Windows support
+- better custoimzation
+- mode advanced ping options
+- mode probes
 
-0.3:
-- [x] add daemon mode with intervals (or/and nonstop option)
-- [x] add retry to db driver
-- [x] add gorutines for loaders/savers
-- [x] loading rest of parameters from config file
-- [x] update example config, add comments describing API/DB fields
+### Config loading sequence (the first least important):
 
-0.4:
-- [ ] add db and new schema tests
-- [ ] add arp protocol
-- [ ] add fallback of protocol selection
-- [ ] add windows config loading as well
+- System (/etc/uping/config.toml, /Library/Application Support/Uping/config.toml)
+- Home (~/.uping.toml, ~/Library/Application Support/Uping/config.toml)
+- Command line -C option
 
-0.5:
-- [ ] polishing code, fix grammar mistakes, typos, etc,
-- [ ] organize depedencies as third party modules
-- [ ] add more/better comments
-- [ ] add makefile
-- [ ] improve readme (better description, features, config loading sequence, config description, etc)
+### Note on Linux Support:
 
-0.6 .. 1.0:
-- [ ] better customization of api/db config schema, eg. custom json requests, template system for endpoints
-- [ ] add more advanced ping options
-- [ ] add more probes
+For use unprivileged ping via UDP on linux for regular (non super-user):
+
+```
+sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
+```
+
+If wish to use ICMP raw sockets mode as regualr user:
+
+```
+setcap cap_net_raw=+ep /bin/uping
+```
 
 ### Credits
+
+Uberping is highly inspired by [go-ping](https://github.com/sparrc/go-ping/).
 
 Application was developed by Tomasz Kolaj and is licensed under Apache License Version 2.0.
 Please reports bugs at https://github.com/migotom/uberping/issues.
