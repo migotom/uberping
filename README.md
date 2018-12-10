@@ -63,7 +63,7 @@ blah blah
 - [x] add daemon mode with intervals (or/and nonstop option)
 - [x] add retry to db driver
 - [x] add gorutines for loaders/savers
-- [ ] loading rest of parameters from config file
+- [x] loading rest of parameters from config file
 - [x] update example config, add comments describing API/DB fields
 
 0.4:

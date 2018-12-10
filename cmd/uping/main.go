@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -23,12 +24,12 @@ Options:
   -C <config-file>         Use configuration file, eg. API endpoints, secrets, etc...
   -s                       Be silent and don't print output to stdout, only errors to stderr
   -g                       Print grouped results
-  -p udp|icmp              Set type of ping packet, unprivileged udp or privileged icmp [default: icmp]
+  -p udp|icmp              Set type of ping packet, unprivileged udp or privileged icmp (default: icmp)
   -f                       Use fallback mode, uping will try to use next ping mode if selected by -p failed
-  -c <count>               Number of pings to perform [default: 4]
-  -i <ping-interval>       Interval between pings, e.g. -i 1s, -i 100ms [default: 1s]
-  -t <host-timeout>        Timeout before probing one host terminates, regardless of how many pings perfomed, e.g. -t 1s, -t 100ms [default: <count> * 1s]
-  -w <workers>             Number of parallel workers to run [default: 4]
+  -c <count>               Number of pings to perform (default: 4)
+  -i <ping-interval>       Interval between pings, e.g. -i 1s, -i 100ms (default: 1s)
+  -t <host-timeout>        Timeout before probing one host terminates, regardless of how many pings perfomed, e.g. -t 1s, -t 100ms (default: <count> * 1s)
+  -w <workers>             Number of parallel workers to run (default: 4)
   --source-db              Load hosts using database configured by -C <config-file>
   --source-api             Load hosts using external API configured by -C <config-file>
   --source-file <file-in>  Load hosts from file <file-in>
@@ -40,6 +41,7 @@ Options:
 const version = "0.3.1"
 
 func loadHosts(hostsLoaders *[]schema.HostsLoader, hosts *schema.Hosts) {
+	hosts.Reset()
 	for _, hostsLoader := range *hostsLoaders {
 		if err := hosts.Add(hostsLoader); err != nil {
 			log.Fatal(err)
@@ -86,11 +88,12 @@ func main() {
 	pushJobs(jobs, &Hosts)
 
 	if appConfig.TestsInterval.Seconds() > 0.0 {
-		ticker := time.NewTicker(appConfig.TestsInterval)
+		ticker := time.NewTicker(appConfig.TestsInterval.Duration)
 
 		for {
 			select {
 			case <-ticker.C:
+				fmt.Println("TICK!", appConfig.TestsInterval.Duration)
 				loadHosts(&hostsLoaders, &Hosts)
 				pushJobs(jobs, &Hosts)
 			}

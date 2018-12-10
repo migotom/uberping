@@ -64,6 +64,11 @@ func (h *Hosts) Get() []Host {
 	return h.hosts
 }
 
+// Reset list of hosts.
+func (h *Hosts) Reset() {
+	h.hosts = nil
+}
+
 // Add hosts using HostsLoader function.
 func (h *Hosts) Add(loader HostsLoader) error {
 	hosts, err := loader(h.parseHost)

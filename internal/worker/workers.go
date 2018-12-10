@@ -105,9 +105,9 @@ func Pinger(id int, config schema.GeneralConfig, jobs <-chan schema.Host, wg *sy
 		}
 
 		pinger.SetPrivileged(config.Ping.Privileged)
-		pinger.Interval = config.Ping.Interval
+		pinger.Interval = config.Ping.Interval.Duration
 		pinger.Count = config.Ping.Count
-		pinger.Timeout = config.Ping.Timeout
+		pinger.Timeout = config.Ping.Timeout.Duration
 
 		pinger.Run()
 	}

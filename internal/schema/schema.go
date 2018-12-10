@@ -7,9 +7,20 @@ import (
 // PingConfig sets up go-ping configuration.
 type PingConfig struct {
 	Privileged bool
-	Interval   time.Duration
+	Protocol   string
+	Interval   Duration
 	Count      int
-	Timeout    time.Duration
+	Timeout    Duration
+}
+
+type Duration struct {
+	time.Duration
+}
+
+func (d *Duration) UnmarshalText(text []byte) error {
+	var err error
+	d.Duration, err = time.ParseDuration(string(text))
+	return err
 }
 
 // PingResult keep result of go-ping operation.
@@ -24,7 +35,7 @@ type PingResult struct {
 type GeneralConfig struct {
 	Verbose       bool
 	Grouped       bool
-	TestsInterval time.Duration
+	TestsInterval Duration `toml:"interval_between_tests"`
 	Workers       int
 	Results       chan PingResult
 	Ping          PingConfig

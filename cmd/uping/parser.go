@@ -29,10 +29,20 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 	appConfig.Verbose = !arguments["-s"].(bool)
 	appConfig.Grouped = arguments["-g"].(bool)
 
-	appConfig.Ping.Privileged = true
-	proto := arguments["-p"].(string)
-	if proto == "udp" {
+	switch appConfig.Ping.Protocol {
+	case "udp":
 		appConfig.Ping.Privileged = false
+	case "icmp":
+		appConfig.Ping.Privileged = true
+	case "":
+		appConfig.Ping.Privileged = true
+	default:
+		log.Fatalln("Unsupported protocol.")
+	}
+	if proto, ok := arguments["-p"].(string); ok {
+		if proto == "udp" {
+			appConfig.Ping.Privileged = false
+		}
 	}
 
 	if appConfig.Verbose {
@@ -43,32 +53,40 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 
 	if interval, ok := arguments["-I"].(string); ok {
 		if interval, err := time.ParseDuration(interval); err == nil {
-			appConfig.TestsInterval = interval
+			appConfig.TestsInterval.Duration = interval
 		}
 	}
 
-	appConfig.Ping.Interval = time.Duration(1) * time.Second
+	if appConfig.Ping.Interval.Duration.Seconds() == 0 {
+		appConfig.Ping.Interval.Duration = time.Duration(1) * time.Second
+	}
 	if interval, ok := arguments["-i"].(string); ok {
 		if interval, err := time.ParseDuration(interval); err == nil {
-			appConfig.Ping.Interval = interval
+			appConfig.Ping.Interval.Duration = interval
 		}
 	}
 
-	appConfig.Ping.Count = 4
+	if appConfig.Ping.Count == 0 {
+		appConfig.Ping.Count = 4
+	}
 	if count, ok := arguments["-c"].(string); ok {
 		if count, err := strconv.ParseInt(count, 10, 64); err == nil {
 			appConfig.Ping.Count = int(count)
 		}
 	}
 
-	appConfig.Ping.Timeout = time.Duration(int(appConfig.Ping.Count)) * time.Second
+	if appConfig.Ping.Timeout.Duration.Seconds() == 0 {
+		appConfig.Ping.Timeout.Duration = time.Duration(int(appConfig.Ping.Count)) * time.Second
+	}
 	if timeout, ok := arguments["-t"].(string); ok {
 		if timeout, err := time.ParseDuration(timeout); err == nil {
-			appConfig.Ping.Timeout = timeout
+			appConfig.Ping.Timeout.Duration = timeout
 		}
 	}
 
-	appConfig.Workers = 4
+	if appConfig.Workers == 0 {
+		appConfig.Workers = 4
+	}
 	if workers, ok := arguments["-w"].(string); ok {
 		if workers, err := strconv.ParseInt(workers, 10, 64); err == nil {
 			appConfig.Workers = int(workers)
