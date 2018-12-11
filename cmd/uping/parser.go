@@ -29,24 +29,34 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 	appConfig.Verbose = !arguments["-s"].(bool)
 	appConfig.Grouped = arguments["-g"].(bool)
 
-	switch appConfig.Ping.Protocol {
+	if mode, ok := arguments["--mode"].(string); ok {
+		appConfig.Probe.Mode = mode
+	}
+	switch appConfig.Probe.Mode {
 	case "udp":
-		appConfig.Ping.Privileged = false
+		appConfig.Probe.Worker = worker.Pinger
+		appConfig.Probe.Privileged = false
 	case "icmp":
-		appConfig.Ping.Privileged = true
+		appConfig.Probe.Worker = worker.Pinger
+		appConfig.Probe.Privileged = true
+	case "netcat":
+		appConfig.Probe.Worker = worker.Netcat
+		appConfig.Probe.Mode = "netcat"
 	case "":
-		appConfig.Ping.Privileged = true
+		appConfig.Probe.Worker = worker.Pinger
+		appConfig.Probe.Privileged = true
 	default:
 		log.Fatalln("Unsupported protocol.")
 	}
-	if proto, ok := arguments["-p"].(string); ok {
-		if proto == "udp" {
-			appConfig.Ping.Privileged = false
+
+	if defaultPort, ok := arguments["-P"].(string); ok {
+		if defaultPort, err := strconv.ParseInt(defaultPort, 10, 64); err == nil {
+			appConfig.Probe.DefaultPort = int(defaultPort)
 		}
 	}
 
 	if appConfig.Verbose {
-		resultsSavers = append(resultsSavers, func(pingResult schema.PingResult) error {
+		resultsSavers = append(resultsSavers, func(pingResult schema.ProbeResult) error {
 			return driver.StdoutPingResult(pingResult)
 		})
 	}
@@ -57,30 +67,30 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 		}
 	}
 
-	if appConfig.Ping.Interval.Duration.Seconds() == 0 {
-		appConfig.Ping.Interval.Duration = time.Duration(1) * time.Second
+	if appConfig.Probe.Interval.Duration.Seconds() == 0 {
+		appConfig.Probe.Interval.Duration = time.Duration(1) * time.Second
 	}
 	if interval, ok := arguments["-i"].(string); ok {
 		if interval, err := time.ParseDuration(interval); err == nil {
-			appConfig.Ping.Interval.Duration = interval
+			appConfig.Probe.Interval.Duration = interval
 		}
 	}
 
-	if appConfig.Ping.Count == 0 {
-		appConfig.Ping.Count = 4
+	if appConfig.Probe.Count == 0 {
+		appConfig.Probe.Count = 4
 	}
 	if count, ok := arguments["-c"].(string); ok {
 		if count, err := strconv.ParseInt(count, 10, 64); err == nil {
-			appConfig.Ping.Count = int(count)
+			appConfig.Probe.Count = int(count)
 		}
 	}
 
-	if appConfig.Ping.Timeout.Duration.Seconds() == 0 {
-		appConfig.Ping.Timeout.Duration = time.Duration(int(appConfig.Ping.Count)) * time.Second
+	if appConfig.Probe.Timeout.Duration.Seconds() == 0 {
+		appConfig.Probe.Timeout.Duration = time.Duration(int(appConfig.Probe.Count)) * time.Second
 	}
 	if timeout, ok := arguments["-t"].(string); ok {
 		if timeout, err := time.ParseDuration(timeout); err == nil {
-			appConfig.Ping.Timeout.Duration = timeout
+			appConfig.Probe.Timeout.Duration = timeout
 		}
 	}
 
@@ -121,19 +131,19 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 	}
 
 	if api := arguments["--out-api"].(bool); api {
-		resultsSavers = append(resultsSavers, func(pingResult schema.PingResult) error {
+		resultsSavers = append(resultsSavers, func(pingResult schema.ProbeResult) error {
 			return driver.APISavePingResult(pingResult, &appConfig.API)
 		})
 	}
 
 	if file, ok := arguments["--out-file"].(string); ok {
-		resultsSavers = append(resultsSavers, func(pingResult schema.PingResult) error {
+		resultsSavers = append(resultsSavers, func(pingResult schema.ProbeResult) error {
 			return driver.FileSavePingResult(pingResult, file)
 		})
 	}
 
 	if db := arguments["--out-db"].(bool); db {
-		resultsSavers = append(resultsSavers, func(pingResult schema.PingResult) error {
+		resultsSavers = append(resultsSavers, func(pingResult schema.ProbeResult) error {
 			return driver.DBSqlSavePingResult(pingResult, &appConfig.DB)
 		})
 		cleaners = append(cleaners, func() {

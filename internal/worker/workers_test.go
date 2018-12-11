@@ -17,11 +17,11 @@ func TestToMs(t *testing.T) {
 
 func TestSaver(t *testing.T) {
 	var config schema.GeneralConfig
-	config.Results = make(chan schema.PingResult, 1)
+	config.Results = make(chan schema.ProbeResult, 1)
 
 	var result string
 	var s []ResultsSaver
-	s = append(s, func(r schema.PingResult) error {
+	s = append(s, func(r schema.ProbeResult) error {
 		result = "done"
 		return nil
 	})
@@ -30,7 +30,7 @@ func TestSaver(t *testing.T) {
 	wg.Add(1)
 	go Saver(config, s, &wg)
 
-	config.Results <- schema.PingResult{Loss: 1}
+	config.Results <- schema.ProbeResult{Loss: 1}
 	close(config.Results)
 	wg.Wait()
 
@@ -44,12 +44,12 @@ func TestPinger(t *testing.T) {
 	var config schema.GeneralConfig
 
 	// TODO consider, do we need to mockup this or test real behaviour like this?
-	config.Ping.Privileged = false
-	config.Ping.Count = 1
-	config.Ping.Interval = time.Duration(1) * time.Second
-	config.Ping.Timeout = time.Duration(1) * time.Second
+	config.Probe.Privileged = false
+	config.Probe.Count = 1
+	config.Probe.Interval.Duration = time.Duration(1) * time.Second
+	config.Probe.Timeout.Duration = time.Duration(1) * time.Second
 
-	config.Results = make(chan schema.PingResult, 1)
+	config.Results = make(chan schema.ProbeResult, 1)
 	jobs := make(chan schema.Host, 1)
 
 	var wg sync.WaitGroup

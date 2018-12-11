@@ -5,12 +5,12 @@ import (
 	"testing"
 )
 
-func trueParser(s string) (string, error) {
-	return s, nil
+func trueParser(s string) (string, string, error) {
+	return s, "", nil
 }
 
-func falseParser(s string) (string, error) {
-	return "", errors.New("Invalid")
+func falseParser(s string) (string, string, error) {
+	return "", "", errors.New("Invalid")
 }
 
 func TestLoadHostsValidData(t *testing.T) {

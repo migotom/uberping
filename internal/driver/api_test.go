@@ -212,7 +212,7 @@ func TestAPI(t *testing.T) {
 		t.Errorf("Expected to read correct IP, got: %v", hosts)
 	}
 
-	err = APISavePingResult(schema.PingResult{Host: hosts[0], Loss: 50.0, AvgTime: 0.11}, client.apiConfig)
+	err = APISavePingResult(schema.ProbeResult{Host: hosts[0], Loss: 50.0, AvgTime: 0.11}, client.apiConfig)
 	if err != nil {
 		t.Errorf("Fail to save ping result, got error: %v", err)
 	}

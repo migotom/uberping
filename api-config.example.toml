@@ -1,8 +1,8 @@
-workers = 4
-interval_between_tests = "1m"
+workers = 4                     # number of workers probing hosts in paraller, list of hosts is distributed between workers
+interval_between_tests = "1m"   # if defined, uping will probe devices in continous mode with specified intervals
 
-[ping]
-protocol = "udp"
+[probe]
+mode = "udp"
 interval = "500ms"
 timeout = "4s"
 count = 10

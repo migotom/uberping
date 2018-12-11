@@ -19,11 +19,11 @@ func FileLoadHosts(hostParser schema.HostParser, filename string) ([]schema.Host
 	var hosts []schema.Host
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		ip, err := hostParser(scanner.Text())
+		ip, port, err := hostParser(scanner.Text())
 		if err != nil {
 			return nil, err
 		}
-		hosts = append(hosts, schema.Host{IP: ip})
+		hosts = append(hosts, schema.Host{IP: ip, Port: port})
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func FileLoadHosts(hostParser schema.HostParser, filename string) ([]schema.Host
 }
 
 // FileSavePingResult save probe results to file.
-func FileSavePingResult(result schema.PingResult, filename string) error {
+func FileSavePingResult(result schema.ProbeResult, filename string) error {
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

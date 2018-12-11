@@ -42,6 +42,7 @@ blah blah
 ### Implemented:
 
 - ping hosts using unprivileged udp or privileged icmp
+- probe hosts using netcat like establishing tcp connection for specified service port
 - take hosts to test from command line, file, database (currently only postgresql) and external REST API
 - save test results to file, database and external REST API
 - ability to combine input sources and outputs, eg. load hosts from file and database (list of hosts are refreshed before each tests iteration)
@@ -62,6 +63,7 @@ blah blah
 
 ### Config loading sequence (the first least important):
 
+- Application defaults
 - System (/etc/uping/config.toml, /Library/Application Support/Uping/config.toml)
 - Home (~/.uping.toml, ~/Library/Application Support/Uping/config.toml)
 - Command line -C option

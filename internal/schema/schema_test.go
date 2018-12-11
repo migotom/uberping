@@ -46,7 +46,7 @@ func TestParseHost(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.Input, func(t *testing.T) {
 			var hosts Hosts
-			_, err := hosts.parseHost(tc.Input)
+			_, _, err := hosts.parseHost(tc.Input)
 
 			if err == nil && tc.ExpectedErrStr != "" ||
 				err != nil && tc.ExpectedErrStr != err.Error() {

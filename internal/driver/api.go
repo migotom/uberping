@@ -134,18 +134,19 @@ func APILoadHosts(hostParser schema.HostParser, apiConfig *schema.APIConfig) ([]
 	}
 
 	for i, device := range apiDevices {
-		ip, err := hostParser(device.IP)
+		ip, port, err := hostParser(device.IP)
 		if err != nil {
 			return nil, err
 		}
 		apiDevices[i].IP = ip
+		apiDevices[i].Port = port
 	}
 
 	return apiDevices, nil
 }
 
 // APISavePingResult save probe results using external API
-func APISavePingResult(result schema.PingResult, apiConfig *schema.APIConfig) error {
+func APISavePingResult(result schema.ProbeResult, apiConfig *schema.APIConfig) error {
 	client := getAPIClient(apiConfig)
 
 	// consider this, should skip update if host doesn't have ID, or should search in API using IP?

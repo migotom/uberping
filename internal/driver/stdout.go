@@ -7,7 +7,7 @@ import (
 )
 
 // StdoutPingResult saves probe results to STDOUT.
-func StdoutPingResult(result schema.PingResult) error {
+func StdoutPingResult(result schema.ProbeResult) error {
 	for _, line := range result.Output {
 		fmt.Println(line)
 	}

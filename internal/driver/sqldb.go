@@ -97,7 +97,7 @@ func DBSqlLoadHosts(hostParser schema.HostParser, dbConfig *schema.DBConfig) ([]
 		if err != nil {
 			return nil, err
 		}
-		host.IP, err = hostParser(host.IP)
+		host.IP, host.Port, err = hostParser(host.IP)
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +114,7 @@ func DBSqlLoadHosts(hostParser schema.HostParser, dbConfig *schema.DBConfig) ([]
 }
 
 // DBSqlSavePingResult save ping results using db.
-func DBSqlSavePingResult(result schema.PingResult, dbConfig *schema.DBConfig) error {
+func DBSqlSavePingResult(result schema.ProbeResult, dbConfig *schema.DBConfig) error {
 	db, ok := dbConfig.Connection.(*sqlDB)
 	if !ok {
 		log.Fatal("No database connection")

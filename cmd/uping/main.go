@@ -19,11 +19,12 @@ Usage:
   uping --version
 
 Options:
+  --mode udp|icmp|netcat   Set type of probe operation: ping with unprivileged udp, icmp or try to connect using tcp port (default: icmp)
   -d <tests-interval>      Interval between tests, if provided uping will perform tests indefinitely, e.g. every -I 1m, -I 1m30s, -I 1h30m10s
   -C <config-file>         Use configuration file, eg. API endpoints, secrets, etc...
   -s                       Be silent and don't print output to stdout, only errors to stderr
   -g                       Print grouped results
-  -p udp|icmp              Set type of ping packet, unprivileged udp or privileged icmp (default: icmp)
+  -P <default-port>        In case of netcat mode use <default-port> for hosts without explicitly specified port, e.g. -p 8080
   -f                       Use fallback mode, uping will try to use next ping mode if selected by -p failed
   -c <count>               Number of pings to perform (default: 4)
   -i <ping-interval>       Interval between pings, e.g. -i 1s, -i 100ms (default: 1s)
@@ -36,6 +37,8 @@ Options:
   --out-api                Save tests results using external API configured by -C <config-file>
   --out-file <file-out>    Save tests results to file <file-out>
 `
+
+//
 
 const version = "0.3.5"
 
@@ -64,6 +67,7 @@ func main() {
 	hostsLoaders, resultsSavers, cleaners := configParser(arguments, &appConfig)
 
 	// Load list of hosts
+	Hosts.Init(appConfig.Probe.DefaultPort)
 	loadHosts(&hostsLoaders, &Hosts)
 	if len(Hosts.Get()) == 0 {
 		log.Fatalln("No hosts to test.")
@@ -71,17 +75,17 @@ func main() {
 
 	// Create workers pool
 	jobs := make(chan schema.Host, appConfig.Workers)
-	appConfig.Results = make(chan schema.PingResult, len(Hosts.Get()))
+	appConfig.Results = make(chan schema.ProbeResult, len(Hosts.Get()))
 
-	var wgPinger sync.WaitGroup
+	var wgWorker sync.WaitGroup
 	var wgWriter sync.WaitGroup
 
 	wgWriter.Add(1)
 	go worker.Saver(appConfig, resultsSavers, &wgWriter)
 
 	for i := 0; i < appConfig.Workers; i++ {
-		wgPinger.Add(1)
-		go worker.Pinger(i, appConfig, jobs, &wgPinger)
+		wgWorker.Add(1)
+		go appConfig.Probe.Worker(i, appConfig, jobs, &wgWorker)
 	}
 
 	pushJobs(jobs, &Hosts)
@@ -99,7 +103,7 @@ func main() {
 	}
 
 	close(jobs)
-	wgPinger.Wait()
+	wgWorker.Wait()
 
 	close(appConfig.Results)
 	wgWriter.Wait()

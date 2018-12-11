@@ -1,31 +1,40 @@
 package schema
 
 import (
+	"sync"
 	"time"
 )
 
-// PingConfig sets up go-ping configuration.
-type PingConfig struct {
-	Privileged bool
-	Protocol   string
-	Interval   Duration
-	Count      int
-	Timeout    Duration
-}
+// Worker specifies worker type function.
+type Worker func(id int, config GeneralConfig, jobs <-chan Host, wg *sync.WaitGroup)
 
+// Duration is custom time.Duration implementation needed by TOML unmarshal.
 type Duration struct {
 	time.Duration
 }
 
+// UnmarshalText TOML config.
 func (d *Duration) UnmarshalText(text []byte) error {
 	var err error
 	d.Duration, err = time.ParseDuration(string(text))
 	return err
 }
 
-// PingResult keep result of go-ping operation.
-type PingResult struct {
+// ProbeConfig sets up go-ping configuration.
+type ProbeConfig struct {
+	Privileged  bool
+	Mode        string
+	Interval    Duration
+	Count       int
+	Timeout     Duration
+	DefaultPort int `toml:"default_netcat_port"`
+	Worker      Worker
+}
+
+// ProbeResult keep result of go-ping operation.
+type ProbeResult struct {
 	Host    Host
+	Status  string
 	Output  []string
 	Loss    float64
 	AvgTime float64
@@ -37,8 +46,8 @@ type GeneralConfig struct {
 	Grouped       bool
 	TestsInterval Duration `toml:"interval_between_tests"`
 	Workers       int
-	Results       chan PingResult
-	Ping          PingConfig
+	Results       chan ProbeResult
+	Probe         ProbeConfig
 	API           APIConfig
 	DB            DBConfig
 }
