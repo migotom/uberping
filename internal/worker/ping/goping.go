@@ -270,7 +270,6 @@ func (p *Pinger) run() {
 			return
 		case <-interval.C:
 			if p.Count > 0 && p.PacketsSent >= p.Count {
-				fmt.Println("a")
 				continue
 			}
 			err = p.sendICMP(conn)
@@ -362,7 +361,6 @@ func (p *Pinger) recvICMP(
 				if neterr, ok := err.(*net.OpError); ok {
 					if neterr.Timeout() {
 						// Read timeout
-						fmt.Println("timeout")
 						continue
 					} else {
 						close(p.done)
