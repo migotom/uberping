@@ -8,7 +8,7 @@ import (
 
 	"github.com/migotom/uberping/internal/schema"
 	"github.com/migotom/uberping/internal/worker/netcat"
-	goping "github.com/sparrc/go-ping"
+	goping "github.com/migotom/uberping/internal/worker/ping"
 )
 
 // ResultsSaver saves PingResult.

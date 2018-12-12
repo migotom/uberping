@@ -19,7 +19,8 @@ Usage:
   uping --version
 
 Options:
-  --mode udp|icmp|netcat   Set type of probe operation: ping with unprivileged udp, icmp or try to connect using tcp port (default: icmp)
+  --mode ping|netcat       Set type of probe operation: ping with unprivileged udp, icmp or try to connect using tcp port (default: icmp)
+  -p udp|icmp|tcp          Set a protocol for selected above mode, for ping: udp|icmp, for netcat: tcp (default: icmp for ping and tcp for netcat)
   -d <tests-interval>      Interval between tests, if provided uping will perform tests indefinitely, e.g. every -I 1m, -I 1m30s, -I 1h30m10s
   -C <config-file>         Use configuration file, eg. API endpoints, secrets, etc...
   -s                       Be silent and don't print output to stdout, only errors to stderr

@@ -11,16 +11,18 @@ Usage:
   uping --version
 
 Options:
+  --mode ping|netcat       Set type of probe operation: ping with unprivileged udp, icmp or try to connect using tcp port (default: icmp)
+  -p udp|icmp|tcp          Set a protocol for selected above mode, for ping: udp|icmp, for netcat: tcp (default: icmp for ping and tcp for netcat)
   -d <tests-interval>      Interval between tests, if provided uping will perform tests indefinitely, e.g. every -I 1m, -I 1m30s, -I 1h30m10s
-  -C <config-file>         Use configuration file, e.g. API endpoints, secrets, etc...
-  -s                       Be silent and don't print output to stdout
+  -C <config-file>         Use configuration file, eg. API endpoints, secrets, etc...
+  -s                       Be silent and don't print output to stdout, only errors to stderr
   -g                       Print grouped results
-  -p udp|icmp              Set type of ping packet, unprivileged udp or privileged icmp [default: icmp]
+  -P <default-port>        In case of netcat mode use <default-port> for hosts without explicitly specified port, e.g. -p 8080
   -f                       Use fallback mode, uping will try to use next ping mode if selected by -p failed
-  -c <count>               Number of pings to perform [default: 4]
-  -i <ping-interval>       Interval between pings, e.g. -i 1s, -i 100ms [default: 1s]
-  -t <host-timeout>        Timeout before probing one host terminates, regardless of how many pings performed, e.g. -t 1s, -t 100ms [default: <count> * 1s]
-  -w <workers>             Number of parallel workers to run [default: 4]
+  -c <count>               Number of pings to perform (default: 4)
+  -i <ping-interval>       Interval between pings, e.g. -i 1s, -i 100ms (default: 1s)
+  -t <host-timeout>        Timeout before probing one host terminates, regardless of how many pings perfomed, e.g. -t 1s, -t 100ms (default: <count> * 1s)
+  -w <workers>             Number of parallel workers to run (default: 4)
 
 Sources (may be combined):
   --source-db              Load hosts using database configured by -C <config-file>
@@ -57,9 +59,10 @@ blah blah
 - ARP protocol
 - fallback to other protocol in case of failure
 - Windows support
-- better customization
-- more advanced ping options
+- better customization (e.g. queries, api endpoints per mode)
+- more advanced ping, netcat options
 - mode probes
+- ipv6
 
 ### Config loading sequence (the first least important):
 

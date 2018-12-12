@@ -24,6 +24,7 @@ func (d *Duration) UnmarshalText(text []byte) error {
 type ProbeConfig struct {
 	Privileged  bool
 	Mode        string
+	Protocol    string
 	Interval    Duration
 	Count       int
 	Timeout     Duration

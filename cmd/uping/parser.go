@@ -33,20 +33,38 @@ func configParser(arguments map[string]interface{}, appConfig *schema.GeneralCon
 		appConfig.Probe.Mode = mode
 	}
 	switch appConfig.Probe.Mode {
-	case "udp":
+	case "ping":
 		appConfig.Probe.Worker = worker.Pinger
-		appConfig.Probe.Privileged = false
-	case "icmp":
-		appConfig.Probe.Worker = worker.Pinger
-		appConfig.Probe.Privileged = true
 	case "netcat":
 		appConfig.Probe.Worker = worker.Netcat
-		appConfig.Probe.Mode = "netcat"
 	case "":
 		appConfig.Probe.Worker = worker.Pinger
+	default:
+		log.Fatalln("Unsupported mode.")
+	}
+
+	if proto, ok := arguments["-p"].(string); ok {
+		appConfig.Probe.Protocol = proto
+	}
+	switch proto := appConfig.Probe.Protocol; appConfig.Probe.Mode == "ping" {
+	case proto == "udp":
+		appConfig.Probe.Privileged = false
+	case proto == "icmp":
+		appConfig.Probe.Privileged = true
+	case proto == "":
 		appConfig.Probe.Privileged = true
 	default:
-		log.Fatalln("Unsupported protocol.")
+		log.Fatalln("Unsupported protocol for ping mode.")
+	}
+	switch proto := appConfig.Probe.Protocol; appConfig.Probe.Mode == "netcat" {
+	case proto == "tcp":
+		// do nothing yet
+	case proto == "udp":
+		log.Fatalln("Unsupported yet protocol for netcat mode.")
+	case proto == "":
+		// do nothing
+	default:
+		log.Fatalln("Unsupported protocol for netcat mode.")
 	}
 
 	if defaultPort, ok := arguments["-P"].(string); ok {

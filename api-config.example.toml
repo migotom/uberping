@@ -2,7 +2,8 @@ workers = 4                     # number of workers probing hosts in paraller, l
 interval_between_tests = "1m"   # if defined, uping will probe devices in continous mode with specified intervals
 
 [probe]
-mode = "udp"
+mode = "ping"                   # ping or netcat
+protocol = "icmp"               # for ping: icmp, udp, for netcat: tcp
 interval = "500ms"
 timeout = "4s"
 count = 10
