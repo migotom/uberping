@@ -56,6 +56,7 @@ blah blah
 
 ### Not yet implemented:
 
+- separate API endpoints/DB queries for ping/netcat modes
 - ARP protocol
 - fallback to other protocol in case of failure
 - Windows support
